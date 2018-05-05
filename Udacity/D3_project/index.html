@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <script src="http://d3js.org/d3.v3.min.js"></script>
+    <script src="http://dimplejs.org/dist/dimple.v2.0.0.min.js"></script>
+
+    <style>
+      circle.dimple-series-1 {
+        fill: red;
+      }
+          div.bottoms{
+        position: fixed;
+        top: 80px;
+        left: 1000px;
+    }
+          div.bottoms div {
+        background-color: rgb(251, 213, 127);
+        padding: 10px;
+        margin: 2px;
+        display: inline;
+      }
+        h1 {
+      text-align: center;
+      color: rgb(219,112,147);
+      font-family: arial;
+      font-size:30;
+      font-style: italic;
+
+    }
+    p {
+      text-align: center;
+      color: blue;
+      font-family: arial;
+      font-size: 15
+    }
+    </style>
+
+    <script type="text/javascript">
+      function draw(data) {
+
+      /*
+        D3.js setup code
+      */
+          "use strict"
+
+              var width = 1400,
+              height = 450,
+              margin = {left:100,top:30,right:20,bottom:60};
+          //定义标题
+          d3.select('body')
+              .append('h1')
+              .text("Avg over handness,height,weight")
+          d3.select('body')
+              .append('p')
+              .text("A dataset of baseplayer's handedness and avg score")
+
+          //定义svg大小
+          var svg = d3.select("body")
+            .append("svg")
+              .attr("width", width)
+              .attr("height", height)
+            .append('g')
+                .attr('class','chart');
+          d3.select("svg")
+              .selectAll('circle')
+              .data(data)
+              .enter()
+              .append('circle');
+
+      /*
+        Dimple.js Chart construction code
+      */
+          var catatory = [{"btn_text":"Height-avg","content_1":"height",'content_2':'avg'},
+                          {"btn_text":"Weight-avg","content_1":"weight",'content_2':'avg'},
+                          ];
+
+          //根据选择内容更新图像
+          function update(key_word_1,key_word_2){
+          var myChart = new dimple.chart(svg, data);
+          var x_scale=myChart.addCategoryAxis("x",key_word_1);
+          var y_scale=myChart.addCategoryAxis("y",key_word_2);
+          y_scale.tickFormate=",.0f"
+
+              //根据所选内容画图
+          myChart.addSeries("handedness",dimple.plot.scatter);
+          myChart.addLegend(700,10,510,20, "right");
+          myChart.draw();
+
+
+          }
+          var buttons = d3.select("body")
+            .append("div")
+            .attr("class", "bottoms")
+            .selectAll("div")
+            .data(catatory)   //定义了按钮，且按钮的值来自于catatory这个中间
+            .enter()
+            .append("div")
+            .attr("class","bottom")
+            .attr('width',3)
+            .attr('height',5)
+            .text(function(d) {
+                return d["btn_text"];
+            })
+              .style("font-size",'25');
+
+                    buttons.on("click", function(d) {   // 这段代码的意思是click之后对.bpttoms下的div进行改动的颜色会发生变化等
+              d3.select(".bottoms")
+                  .selectAll("div")
+                  .transition()
+                  .duration(500)
+                  .style("color", "black")
+                  .style("background", "rgb(251, 201, 127)");
+
+              d3.select(this)         //选中的这个对象
+                  .transition()
+                  .duration(500)
+                  .style("background", "lightBlue")    //
+                  .style("color", "white");
+              update(d["content_1"],d['content_2']);
+          })};
+
+    </script>
+  </head>
+<body>
+  <script type="text/javascript">
+  /*
+    Use D3 (not dimple.js) to load the TSV file
+    and pass the contents of it to the draw function
+    */
+  d3.csv("baseball.csv", draw);
+  </script>
+</body>
+</html>
