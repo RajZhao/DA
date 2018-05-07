@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="http://d3js.org/d3.v3.min.js"></script>
+  <script src="http://dimplejs.org/dist/dimple.v2.0.0.min.js"></script>
+<style>
+	circle.dimple-series-1{fill:red}
+	 h2 {
+		 text-align: center;}
+     div.bottoms{
+        position: fixed;
+        top: 70px;
+        left: 950px;
+    }
+    .keys{
+      position: fixed;
+      top:200px;
+      left: 1200px;
+    }
+      div.bottoms div {
+        background-color: rgb(251, 213, 127);
+        padding: 10px;
+        margin: 2px;
+        display: inline;
+      }
+      .legend {
+          font-size: 18px;
+          font-family: arial;
+          font-style: italic;
+          color: 'blue';
+        }
+        rect {
+          stroke-width: 2;
+        }
+</style>
+    <script type="text/javascript">
+      function draw(data) {
+      /*
+        D3.js setup code
+      */
+          "use strict";
+          var margin = 75,
+              width = 1400 - margin,
+              height = 600 - margin;
+          var radius=4;
+          var color='red';
+           d3.select("svg")
+            .selectAll("circle")
+            .data(data)
+            .enter()
+            .append("circle");
+           //创建标题
+            d3.select('body')
+              .append('h2')
+              .text("Baseball's data");
+              var svg = d3.select("body")
+                .append("svg")
+                  .attr("width", width + margin)
+                  .attr("height", height + margin)
+                  .append('g')
+                  .attr('class','chart');
+      /*
+        Dimple.js Chart construction code
+      */
+      //画出heigh-avg点图
+         var x_extent=d3.extent(data,function (d) {
+             return d['height'];
+         });
+         var y_extent=d3.extent(data,function (d) {
+             return d['avg'];
+         });
+         var x_scale=d3.scale.linear()
+             .domain(x_extent)
+             .range([margin,width]);
+         var y_scale=d3.scale.linear()
+             .domain(y_extent)
+             .range([height,margin]);
+         var bulit_x_scale=d3.svg.axis()
+             .scale(x_scale)
+             .orient("bottom")
+             .ticks(20);
+         var bulit_y_scale=d3.svg.axis()
+             .orient("left")
+             .scale(y_scale)
+             .ticks(20);
+         var x_axis=d3.select('svg')
+             .append('g')
+             .attr('class','x axis')
+             .attr("transform", "translate(0," + height + ")")
+             .call(bulit_x_scale);
+         var y_axis=d3.select('svg')
+             .append('g')
+             .attr('class','y axis')
+             .attr("transform", "translate(" + margin + ")",0)
+             .call(bulit_y_scale);
+        var x_axis_text = x_axis.append('text')
+                          .attr('class','x_axis_text')
+                          .text('height(身高/英寸)')
+                          .attr('x',600)
+                          .attr('y',30)
+                          .attr('dy','1em')
+                          .attr('font-family','arial');
+        var y_axis_text = y_axis.append('text')
+                          .text('Home Run（全垒得分）')
+                          .attr('font-family','arial')
+                          .attr('x',5)
+                          .attr('y',margin)
+                          .attr('dy','1em')
+                          .attr('color','black');
+        //该函数根据使用手的区别而规定不同的颜色
+         function judge_color(val) {
+             if (val=='R'){
+                 return 'blue';
+             }
+             else if(val=='L'){
+                 return 'red';
+             }
+             else {
+                 return 'black';
+             }
+         }
+         //画圆
+          var circle_groups = svg.selectAll('.circle')
+              .data(data)
+              .enter()
+              .append('g')
+              .attr('class','circle')
+        var circles = circle_groups.append('circle')
+              .attr("cx", function(d) {
+                        return x_scale(d['height']-0.2*Math.random());
+                    })
+              .attr("cy", function(d) {
+                  return y_scale(d["avg"]);
+              })
+              .attr("r", radius)
+              .attr("fill", function(d){
+                return judge_color(d['handedness'])})
+              .attr('fill-opacity','0.5');
+         //设置图例
+          var legendRectSize =15 ;
+          var legendSpacing = 5;
+          var legend_content = [{'color':'blue','content':'Right'},
+                          {'color':'red','content':'Left'},
+                          {'color':'black','content':'Both'}];
+                 var legend = svg.selectAll('.legend')
+                    .data(legend_content)
+                    .enter()
+                    .append('g')
+                    .attr('class', 'legend')
+                    .attr('transform', function(d, i) {
+                      var height = legendRectSize + legendSpacing;
+                      var offset =  height*5;
+                      var horz = -2 * legendRectSize;
+                      var vert = i * height - offset;
+                      return 'translate(' + horz + ',' + vert + ')';
+                    });
+        legend.append('circle')
+            .attr('width', legendRectSize)
+            .attr('height', legendRectSize)
+            .attr('cx',1135)
+            .attr('cy',147)
+            .attr('r',5)
+            .attr('fill', function(d){
+              return d['color'];
+            });
+        legend.append('text')
+                    .attr('x', 1150)
+                    .attr('y', 150)
+                    .text(function(d) { return d['content']; });
+        //设定标签的内容
+ var catatory = [{"btn_text":"Height-avg","content_1":"height",'content_2':'avg'},
+                          {"btn_text":"Weight-avg","content_1":"weight",'content_2':'avg'},
+                          {"btn_text":"Height-HR","content_1":"height",'content_2':'HR'},
+                          {"btn_text":"Weight-HR","content_1":"weight",'content_2':'HR'}];
+          var buttons = d3.select("body")
+            .append("div")
+            .attr("class", "bottoms")
+            .selectAll("div")
+            .data(catatory)   //定义了按钮，且按钮的值来自于catatory这个中间
+            .enter()
+            .append("div")
+            .text(function(d) {
+                return d["btn_text"];
+            })
+          // 定义点击按钮之后的事件
+          //根据所选标签，更改坐标
+          function update_axis(key_word_1,key_word_2){
+            x_extent = d3.extent(data,function(d){
+                  return d[key_word_1];
+                      });
+            y_extent = d3.extent(data,function(d){
+                  return d[key_word_2];
+            })
+            x_scale = d3.scale.linear()
+                  .range([margin,width])
+                  .domain(x_extent);
+            y_scale = d3.scale.linear()
+                  .range([height,margin-70])
+                  .domain(y_extent);
+            bulit_x_scale = d3.svg.axis()
+                  .scale(x_scale)
+                  .orient("bottom")
+                .ticks(20);
+            bulit_y_scale= d3.svg.axis()
+                  .scale(y_scale)
+                  .orient('left');
+            x_axis.transition()
+                 .duration(500)
+                 .call(bulit_x_scale);
+            y_axis.transition()
+                  .duration(500)
+                  .call(bulit_y_scale)
+            x_axis_text.transition()
+                  .duration(500)
+                  .text(function(){
+                    if (key_word_1 == 'height'){
+                      return 'height(身高/英寸）';
+                    }
+                    else {
+                      return 'weight（体重/磅）';
+                    }
+                  });
+            y_axis_text.transition()
+                  .duration(500)
+                  .text(
+                    function(){
+                      if (key_word_2 == 'HR'){
+                        return 'Home Run（全垒得分）';
+                      }
+                      else {
+                        return 'avg(击球率%)'
+                      }
+                    });
+          }
+          //根据所选标签，更新图形中的圆
+          function update_circle(key_word_1,key_word_2) {
+          circles.transition()
+                 .duration(500)
+                 .attr("cx", function(d) {
+                   return x_scale(d[key_word_1]-0.2*Math.random());
+          })
+              .attr("cy",function (d) {
+                   return y_scale(d[key_word_2])}
+              )
+          }
+          //更新函数
+ function update(key_word_1,key_word_2){
+            update_axis(key_word_1,key_word_2);
+            update_circle(key_word_1,key_word_2);
+          };
+          buttons.on("click", function(d) {   // 这段代码的意思是click之后对.bpttoms下的div进行改动的颜色会发生变化等
+              d3.select(".bottoms")
+                  .selectAll("div")
+                  .transition()
+                  .duration(500)
+                  .style("color", "black")
+                  .style("background", "rgb(251, 201, 127)");
+              d3.select(this)         //这段的意思对于选中的这个对象
+                  .transition()
+                  .duration(500)
+                  .style("background", "lightBlue")    //
+                  .style("color", "white");
+              update(d["content_1"],d['content_2']);
+          });
+      };
+      </script>
+  </head>
+<body>
+  <script type="text/javascript">
+  /*
+    Use D3 (not dimple.js) to load the TSV file
+    and pass the contents of it to the draw function
+    */
+  d3.csv("baseball.csv", draw);
+  </script>
+</body>
+</html>
